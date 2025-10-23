@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEXOS - Sistema de IA Avançado | Dexos Internegeon</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1E90FF;
+            --secondary-color: #FF8C00;
+            --accent-color: #00D4AA;
+            --dark-color: #0A0A2A;
+            --darker-color: #050518;
+            --light-color: #f4f4f4;
+            --gray-color: #8A8AA3;
+            --success-color: #00C851;
+            --error-color: #ff4444;
+            --warning-color: #ffbb33;
+            --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --gradient-2: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            --card-bg: rgba(30, 144, 255, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--dark-color);
+            color: var(--light-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(30, 144, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 140, 0, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-logo {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* HUD System */
+        .hud-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hud-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .hud-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hud-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .hud-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .stat-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .stat-progress {
+            height: 100%;
+            background: var(--gradient);
+            transition: width 0.5s ease;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--light-color);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        /* Modal System */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--darker-color);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--gray-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--light-color);
+        }
+
+        .modal-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-logo h2 {
+            font-size: 2rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Header */
+        header {
+            background: rgba(10, 10, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            padding: 15px 0;
+            transition: var(--transition);
+        }
+
+        header.scrolled {
+            background: rgba(10, 10, 42, 0.95);
+            padding: 10px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--secondary-color);
+        }
+
+        .logo .company {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-left: 10px;
+            font-weight: normal;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--light-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 144, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 144, 255, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .mobile-nav {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mobile-nav.active {
+            display: flex;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 0 120px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(30, 144, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 140, 0, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--gray-color);
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .company-badge {
+            display: inline-block;
+            background: var(--gradient);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-lg {
+            padding: 16px 35px;
+            font-size: 1.1rem;
+        }
+
+        .btn-accent {
+            background: var(--gradient-2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.4);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 120px 0;
+            background: var(--darker-color);
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-title h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-title p {
+            font-size: 1.2rem;
+            color: var(--gray-color);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(30, 144, 255, 0.3);
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--light-color);
+        }
+
+        .feature-card p {
+            color: var(--gray-color);
+            line-height: 1.7;
+        }
+
+        /* Chat IA Section */
+        .chat-section {
+            padding: 120px 0;
+            background: var(--dark-color);
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chat-header {
+            background: var(--gradient);
+            padding: 25px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h3 {
+            font-size: 1.5rem;
+            color: white;
+            margin: 0;
+        }
+
+        .chat-stats {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.user {
+            background: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai {
+            background: var(--glass-bg);
+            color: var(--light-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input {
+            padding: 25px 30px;
+            background: rgba(10, 10, 42, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: var(--light-color);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+        }
+
+        .chat-input button {
+            padding: 15px 25px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-input button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 144, 255, 0.4);
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Dashboard Section */
+        .dashboard {
+            padding: 120px 0;
+            background: var(--darker-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dashboard-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--light-color);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: var(--light-color);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-control::placeholder {
+            color: var(--gray-color);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .message-box {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message-box.success {
+            background: rgba(0, 200, 81, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            display: block;
+        }
+
+        .message-box.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+            display: block;
+        }
+
+        .message-box.warning {
+            background: rgba(255, 187, 51, 0.1);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker-color);
+            padding: 80px 0 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .footer-logo span {
+            color: var(--secondary-color);
+        }
+
+        .company-info {
+            color: var(--gray-color);
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+
+        .company-highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: var(--glass-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .footer-links h4 {
+            color: var(--light-color);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: var(--gray-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+            padding-left: 5px;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        /* User Profile */
+        .user-profile {
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            z-index: 1002;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .notification.show {
+            display: flex;
+            animation: slideDown 0.3s ease;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .nav-links, .auth-buttons {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .hero {
+                padding: 150px 0 80px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .hud-container {
+                display: none;
+            }
+
+            .chat-stats {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 0 15px;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .section-title h2 {
+                font-size: 2.2rem;
+            }
+
+            .feature-card {
+                padding: 30px 20px;
+            }
+
+            .chat-messages {
+                height: 300px;
+                padding: 20px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animações */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <i class="fas fa-robot"></i> DEX<span>OS</span>
+        </div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loadingProgress"></div>
+        </div>
+    </div>
+
+    <!-- HUD System -->
+    <div class="hud-container" id="hudContainer">
+        <div class="hud-panel">
+            <div class="hud-header">
+                <i class="fas fa-microchip"></i>
+                <span>Status do Sistema</span>
+            </div>
+            <div class="hud-stats">
+                <div class="stat-item">
+                    <span>CPU:</span>
+                    <span class="stat-value" id="cpuUsage">0%</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-progress" id="cpuBar" style="width: 0%"></div>
+                </div>
+                <div class="stat-item">
+                    <span>Memória:</span>
+                    <span class="stat-value" id="memoryUsage">0%</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-progress" id="memoryBar" style="width: 0%"></div>
+                </div>
+                <div class="stat-item">
+                    <span>Rede:</span>
+                    <span class="stat-value" id="networkStatus">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hud-panel">
+            <div class="hud-header">
+                <i class="fas fa-user"></i>
+                <span>Usuário</span>
+            </div>
+            <div class="hud-stats">
+                <div class="stat-item">
+                    <span>Status:</span>
+                    <span class="stat-value" id="userStatus">Offline</span>
+                </div>
+                <div class="stat-item">
+                    <span>Sessão:</span>
+                    <span class="stat-value" id="sessionTime">0min</span>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <button class="action-btn" onclick="showModal('loginModal')" title="Login">
+                    <i class="fas fa-sign-in-alt"></i>
+                </button>
+                <button class="action-btn" onclick="showModal('registerModal')" title="Cadastrar">
+                    <i class="fas fa-user-plus"></i>
+                </button>
+                <button class="action-btn" onclick="toggleTheme()" title="Alternar Tema">
+                    <i class="fas fa-palette"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification">
+        <i class="fas fa-info-circle"></i>
+        <span id="notificationMessage"></span>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+            <div class="modal-logo">
+                <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+            </div>
+            <div class="message-box" id="loginMessage"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">E-mail</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Sua senha" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+            </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" onclick="showModal('registerModal'); closeModal('loginModal')" 
+                   style="color: var(--primary-color); text-decoration: none;">
+                    Não tem conta? Cadastre-se
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('registerModal')">&times;</button>
+            <div class="modal-logo">
+                <h2><i class="fas fa-user-plus"></i> Cadastro</h2>
+            </div>
+            <div class="message-box" id="registerMessage"></div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Nome Completo</label>
+                    <input type="text" id="registerName" class="form-control" placeholder="Seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">E-mail</label>
+                    <input type="email" id="registerEmail" class="form-control" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        <button type="button" class="toggle-password" onclick="togglePassword('registerPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Confirmar Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Digite novamente" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('registerConfirmPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Criar Conta
+                </button>
+            </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" onclick="showModal('loginModal'); closeModal('registerModal')" 
+                   style="color: var(--primary-color); text-decoration: none;">
+                    Já tem conta? Faça login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header id="mainHeader">
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <i class="fas fa-robot"></i> DEX<span>OS</span>
+                    <span class="company">by Dexos Internegeon</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#home">Início</a></li>
+                    <li><a href="#features">Recursos</a></li>
+                    <li><a href="#chat">Chat IA</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#download">Download</a></li>
+                    <li><a href="#about">Sobre</a></li>
+                </ul>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-outline" onclick="showModal('loginModal')">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-primary" onclick="showModal('registerModal')">
+                        <i class="fas fa-user-plus"></i> Cadastrar
+                    </button>
+                </div>
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span id="userName">Usuário</span>
+                    <button class="btn btn-outline" onclick="logout()" style="padding: 8px 15px;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+                <button class="mobile-menu" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+            <div class="mobile-nav" id="mobileNav">
+                <a href="#home" onclick="toggleMobileMenu()">Início</a>
+                <a href="#features" onclick="toggleMobileMenu()">Recursos</a>
+                <a href="#chat" onclick="toggleMobileMenu()">Chat IA</a>
+                <a href="#dashboard" onclick="toggleMobileMenu()">Dashboard</a>
+                <a href="#download" onclick="toggleMobileMenu()">Download</a>
+                <a href="#about" onclick="toggleMobileMenu()">Sobre</a>
+                <div class="auth-buttons-mobile">
+                    <button class="btn btn-outline" onclick="showModal('loginModal'); toggleMobileMenu()" style="width: 100%; margin-bottom: 10px;">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-primary" onclick="showModal('registerModal'); toggleMobileMenu()" style="width: 100%;">
+                        <i class="fas fa-user-plus"></i> Cadastrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="container">
+            <div class="hero-content fade-in">
+                <div class="company-badge">
+                    <i class="fas fa-rocket"></i> Dexos Internegeon Technology
+                </div>
+                <h1>Revolucione sua Interação com Tecnologia</h1>
+                <p>DEXOS é um sistema de inteligência artificial avançado desenvolvido pela <strong>Dexos Internegeon</strong> para transformar sua experiência digital.</p>
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-primary btn-lg">
+                        <i class="fas fa-download"></i> Baixar Agora
+                    </a>
+                    <a href="#chat" class="btn btn-accent btn-lg">
+                        <i class="fas fa-comments"></i> Experimentar Chat IA
+                    </a>
+                    <a href="#dashboard" class="btn btn-outline btn-lg">
+                        <i class="fas fa-tachometer-alt"></i> Ver Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Recursos Avançados</h2>
+                <p>Tecnologia de ponta desenvolvida pela Dexos Internegeon</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h3>Reconhecimento de Voz</h3>
+                    <p>Comando por voz com tecnologia avançada de processamento de linguagem natural e aprendizado contínuo.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>Reconhecimento Facial</h3>
+                    <p>Identifica pessoas conhecidas e fornece informações personalizadas com alta precisão e segurança.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Visão Computacional</h3>
+                    <p>Identifica e descreve objetos ao redor usando visão computacional de última geração.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Integração Robótica</h3>
+                    <p>Preparado para conectar e controlar sistemas robóticos avançados de forma intuitiva e eficiente.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Chat IA Inteligente</h3>
+                    <p>Converse naturalmente com nossa IA avançada para tirar dúvidas, obter ajuda e executar tarefas.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>Interface Personalizável</h3>
+                    <p>Interface visual moderna e completamente personalizável para atender suas necessidades específicas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat IA Section -->
+    <section class="chat-section" id="chat">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Chat com IA DEXOS</h2>
+                <p>Converse com nossa inteligência artificial e experimente o futuro</p>
+            </div>
+            <div class="chat-container fade-in">
+                <div class="chat-header">
+                    <h3><i class="fas fa-robot"></i> Assistente DEXOS</h3>
+                    <div class="chat-stats">
+                        <div class="chat-stat">
+                            <i class="fas fa-comment"></i>
+                            <span id="messageCount">0</span>
+                        </div>
+                        <div class="chat-stat">
+                            <i class="fas fa-clock"></i>
+                            <span id="chatTime">Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        <strong>DEXOS:</strong> Olá! Sou o DEXOS, seu assistente de IA desenvolvido pela <strong>Dexos Internegeon</strong>. Como posso ajudá-lo hoje?
+                        <div class="message-time" id="initialTime"></div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="handleChatInput(event)">
+                    <button id="sendButton" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Dashboard DEXOS</h2>
+                <p>Controle completo do sistema em tempo real</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="dashboard-card fade-in">
+                    <h3><i class="fas fa-chart-line"></i> Estatísticas do Sistema</h3>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalUsers">1</div>
+                            <div class="stat-label">Usuários</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalMessages">0</div>
+                            <div class="stat-label">Mensagens</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="uptime">100%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="responseTime">0ms</div>
+                            <div class="stat-label">Tempo Resposta</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card fade-in">
+                    <h3><i class="fas fa-cogs"></i> Controles do Sistema</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn btn-outline" onclick="toggleHUD()">
+                            <i class="fas fa-layer-group"></i> Alternar HUD
+                        </button>
+                        <button class="btn btn-outline" onclick="clearChat()">
+                            <i class="fas fa-trash"></i> Limpar Chat
+                        </button>
+                        <button class="btn btn-outline" onclick="exportData()">
+                            <i class="fas fa-download"></i> Exportar Dados
+                        </button>
+                        <button class="btn btn-outline" onclick="optimizeSystem()">
+                            <i class="fas fa-bolt"></i> Otimizar Sistema
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-card fade-in">
+                    <h3><i class="fas fa-info-circle"></i> Informações do Usuário</h3>
+                    <div id="userInfo">
+                        <p style="color: var(--gray-color); text-align: center; padding: 20px;">
+                            Faça login para ver suas informações
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="features" id="download">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Download DEXOS</h2>
+                <p>Escolha a versão perfeita para suas necessidades</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Versão Básica</h3>
+                    <p>Grátis para sempre • Recursos essenciais • Suporte comunitário</p>
+                    <button class="btn btn-outline" style="margin-top: 20px;" onclick="downloadVersion('basic')">
+                        <i class="fas fa-download"></i> Download Gratuito
+                    </button>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h3>Versão Premium</h3>
+                    <p>Todos os recursos • Suporte prioritário • Atualizações exclusivas</p>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="downloadVersion('premium')">
+                        <i class="fas fa-rocket"></i> Assinar Agora
+                    </button>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Para Desenvolvedores</h3>
+                    <p>API completa • Documentação • Exemplos de código</p>
+                    <button class="btn btn-accent" style="margin-top: 20px;" onclick="downloadVersion('developer')">
+                        <i class="fas fa-laptop-code"></i> Acessar API
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="about">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-logo">DEX<span>OS</span></div>
+                    <p class="company-info">
+                        Desenvolvido pela <span class="company-highlight">Dexos Internegeon</span> - 
+                        Líder em tecnologia de inteligência artificial e soluções inovadoras.
+                        <br><br>
+                        <strong>Criador:</strong> Pedro Henrique Ramos
+                    </p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Produto</h4>
+                    <ul>
+                        <li><a href="#features">Recursos</a></li>
+                        <li><a href="#download">Download</a></li>
+                        <li><a href="#chat">Chat IA</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#">Preços</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Suporte</h4>
+                    <ul>
+                        <li><a href="#">Documentação</a></li>
+                        <li><a href="#">Tutoriais</a></li>
+                        <li><a href="#">Comunidade</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Empresa</h4>
+                    <ul>
+                        <li><a href="#">Sobre Nós</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Carreiras</a></li>
+                        <li><a href="#">Privacidade</a></li>
+                        <li><a href="#">Termos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 <strong>DEXOS</strong> by <strong>Dexos Internegeon</strong>. Desenvolvido por <strong>Pedro Henrique Ramos</strong>. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Sistema de Gerenciamento de Estado
+        const DexOSApp = {
+            user: null,
+            isAuthenticated: false,
+            chatHistory: [],
+            systemStats: {
+                cpu: 0,
+                memory: 0,
+                network: true,
+                messages: 0,
+                uptime: 100,
+                responseTime: 0
+            },
+            sessionStart: null,
+            settings: {
+                theme: 'dark',
+                hudVisible: true,
+                notifications: true,
+                autoSave: true
+            }
+        };
+
+        // Loading Screen
+        window.addEventListener('load', function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingProgress = document.getElementById('loadingProgress');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            initializeSystem();
+                        }, 500);
+                    }, 500);
+                }
+                loadingProgress.style.width = progress + '%';
+            }, 200);
+        });
+
+        // Inicialização do Sistema
+        function initializeSystem() {
+            // Carregar usuário do localStorage
+            loadUserFromStorage();
+            
+            // Iniciar monitoramento do sistema
+            startSystemMonitoring();
+            
+            // Iniciar atualização do HUD
+            updateHUD();
+            
+            // Configurar tempo inicial do chat
+            document.getElementById('initialTime').textContent = new Date().toLocaleTimeString();
+            
+            // Mostrar notificação de boas-vindas
+            showNotification('Sistema DEXOS inicializado com sucesso!', 'success');
+        }
+
+        // Monitoramento do Sistema
+        function startSystemMonitoring() {
+            setInterval(() => {
+                // Simular dados do sistema
+                DexOSApp.systemStats.cpu = Math.min(100, Math.max(0, DexOSApp.systemStats.cpu + (Math.random() * 10 - 5)));
+                DexOSApp.systemStats.memory = Math.min(100, Math.max(0, DexOSApp.systemStats.memory + (Math.random() * 8 - 4)));
+                DexOSApp.systemStats.responseTime = Math.floor(Math.random() * 50) + 10;
+                
+                updateSystemStats();
+            }, 2000);
+        }
+
+        // Atualizar Estatísticas do Sistema
+        function updateSystemStats() {
+            document.getElementById('cpuUsage').textContent = Math.round(DexOSApp.systemStats.cpu) + '%';
+            document.getElementById('cpuBar').style.width = DexOSApp.systemStats.cpu + '%';
+            
+            document.getElementById('memoryUsage').textContent = Math.round(DexOSApp.systemStats.memory) + '%';
+            document.getElementById('memoryBar').style.width = DexOSApp.systemStats.memory + '%';
+            
+            document.getElementById('networkStatus').textContent = DexOSApp.systemStats.network ? 'Online' : 'Offline';
+            document.getElementById('networkStatus').style.color = DexOSApp.systemStats.network ? 'var(--success-color)' : 'var(--error-color)';
+            
+            document.getElementById('responseTime').textContent = DexOSApp.systemStats.responseTime + 'ms';
+            document.getElementById('totalMessages').textContent = DexOSApp.systemStats.messages;
+        }
+
+        // Atualizar HUD
+        function updateHUD() {
+            setInterval(() => {
+                if (DexOSApp.isAuthenticated) {
+                    document.getElementById('userStatus').textContent = 'Online';
+                    document.getElementById('userStatus').style.color = 'var(--success-color)';
+                    
+                    if (DexOSApp.sessionStart) {
+                        const sessionTime = Math.floor((Date.now() - DexOSApp.sessionStart) / 60000);
+                        document.getElementById('sessionTime').textContent = sessionTime + 'min';
+                    }
+                } else {
+                    document.getElementById('userStatus').textContent = 'Offline';
+                    document.getElementById('userStatus').style.color = 'var(--error-color)';
+                    document.getElementById('sessionTime').textContent = '0min';
+                }
+            }, 1000);
+        }
+
+        // Header Scroll Effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth Scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Mobile Menu
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('active');
+        }
+
+        // Modal System
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            clearFormMessages();
+        }
+
+        function clearFormMessages() {
+            document.getElementById('loginMessage').style.display = 'none';
+            document.getElementById('registerMessage').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                clearFormMessages();
+            }
+        });
+
+        // Toggle Password Visibility
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleButton = passwordInput.parentNode.querySelector('.toggle-password i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.className = 'fas fa-eye';
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notificationMessage');
+            
+            notificationMessage.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Sistema de Autenticação
+        function loadUserFromStorage() {
+            const savedUser = localStorage.getItem('dexos_user');
+            if (savedUser) {
+                DexOSApp.user = JSON.parse(savedUser);
+                DexOSApp.isAuthenticated = true;
+                DexOSApp.sessionStart = Date.now();
+                updateUIForAuth();
+                updateUserInfo();
+            }
+        }
+
+        function updateUIForAuth() {
+            const authButtons = document.getElementById('authButtons');
+            const userProfile = document.getElementById('userProfile');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+
+            if (DexOSApp.isAuthenticated && DexOSApp.user) {
+                authButtons.style.display = 'none';
+                userProfile.style.display = 'flex';
+                userAvatar.textContent = DexOSApp.user.name.charAt(0).toUpperCase();
+                userName.textContent = DexOSApp.user.name;
+                document.getElementById('totalUsers').textContent = '1';
+            } else {
+                authButtons.style.display = 'flex';
+                userProfile.style.display = 'none';
+                document.getElementById('totalUsers').textContent = '0';
+            }
+        }
+
+        function updateUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            if (DexOSApp.isAuthenticated && DexOSApp.user) {
+                userInfo.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div><strong>Nome:</strong> ${DexOSApp.user.name}</div>
+                        <div><strong>Email:</strong> ${DexOSApp.user.email}</div>
+                        <div><strong>Plano:</strong> <span style="color: var(--accent-color);">${DexOSApp.user.plan}</span></div>
+                        <div><strong>Membro desde:</strong> ${new Date(DexOSApp.user.createdAt).toLocaleDateString('pt-BR')}</div>
+                        <div><strong>Desenvolvedor:</strong> Pedro Henrique Ramos</div>
+                    </div>
+                `;
+            } else {
+                userInfo.innerHTML = '<p style="color: var(--gray-color); text-align: center; padding: 20px;">Faça login para ver suas informações</p>';
+            }
+        }
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageBox = document.getElementById('loginMessage');
+
+            if (!email || !password) {
+                showMessage(messageBox, 'Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+
+            // Simulação de autenticação
+            if (email === 'demo@dexos.com' && password === '123456') {
+                const user = {
+                    id: 1,
+                    name: 'Usuário Demo',
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    plan: 'premium'
+                };
+                
+                DexOSApp.user = user;
+                DexOSApp.isAuthenticated = true;
+                DexOSApp.sessionStart = Date.now();
+                localStorage.setItem('dexos_user', JSON.stringify(user));
+                
+                showMessage(messageBox, 'Login realizado com sucesso!', 'success');
+                showNotification('Bem-vindo de volta ao DEXOS!', 'success');
+                
+                setTimeout(() => {
+                    closeModal('loginModal');
+                    updateUIForAuth();
+                    updateUserInfo();
+                    clearFormMessages();
+                    document.getElementById('loginForm').reset();
+                }, 1500);
+            } else {
+                showMessage(messageBox, 'E-mail ou senha incorretos.', 'error');
+            }
+        });
+
+        // Register Form
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const messageBox = document.getElementById('registerMessage');
+
+            // Validações
+            if (!name || !email || !password || !confirmPassword) {
+                showMessage(messageBox, 'Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage(messageBox, 'A senha deve ter pelo menos 6 caracteres.', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage(messageBox, 'As senhas não coincidem.', 'error');
+                return;
+            }
+
+            // Simulação de cadastro
+            const user = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                createdAt: new Date().toISOString(),
+                plan: 'basic'
+            };
+            
+            DexOSApp.user = user;
+            DexOSApp.isAuthenticated = true;
+            DexOSApp.sessionStart = Date.now();
+            localStorage.setItem('dexos_user', JSON.stringify(user));
+            
+            showMessage(messageBox, 'Conta criada com sucesso!', 'success');
+            showNotification('Bem-vindo ao DEXOS! Sua conta foi criada.', 'success');
+            
+            setTimeout(() => {
+                closeModal('registerModal');
+                updateUIForAuth();
+                updateUserInfo();
+                clearFormMessages();
+                document.getElementById('registerForm').reset();
+            }, 1500);
+        });
+
+        function showMessage(messageBox, text, type) {
+            messageBox.textContent = text;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+        }
+
+        // Logout
+        function logout() {
+            DexOSApp.user = null;
+            DexOSApp.isAuthenticated = false;
+            DexOSApp.sessionStart = null;
+            localStorage.removeItem('dexos_user');
+            updateUIForAuth();
+            updateUserInfo();
+            
+            showNotification('Você saiu da sua conta. Até logo!', 'warning');
+            
+            // Mostrar mensagem de logout no chat
+            const chatMessages = document.getElementById('chatMessages');
+            const logoutMessage = document.createElement('div');
+            logoutMessage.className = 'message ai';
+            logoutMessage.innerHTML = `
+                <strong>DEXOS:</strong> Você saiu da sua conta. Espero vê-lo novamente em breve!
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            chatMessages.appendChild(logoutMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Chat IA Functionality
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (message === '') return;
+            
+            // Desabilitar input durante o processamento
+            input.disabled = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<div class="loading"></div>';
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Atualizar estatísticas
+            DexOSApp.systemStats.messages++;
+            document.getElementById('messageCount').textContent = DexOSApp.systemStats.messages;
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const aiResponse = generateAIResponse(message);
+                addMessage(aiResponse, 'ai');
+                
+                // Reabilitar input
+                input.disabled = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar';
+                input.focus();
+            }, 1000 + Math.random() * 2000);
+        }
+
+        function addMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <strong>Você:</strong> ${text}
+                    <div class="message-time">${timestamp}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <strong>DEXOS:</strong> ${text}
+                    <div class="message-time">${timestamp}</div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Salvar no histórico
+            DexOSApp.chatHistory.push({
+                sender: sender,
+                message: text,
+                timestamp: timestamp
+            });
+        }
+
+        function generateAIResponse(userMessage) {
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // Respostas contextuais
+            if (lowerMessage.includes('oi') || lowerMessage.includes('olá') || lowerMessage.includes('hello')) {
+                return "Olá! É um prazer conversar com você. Sou o DEXOS, desenvolvido pela <strong>Dexos Internegeon</strong>. Como posso ajudar hoje?";
+            } else if (lowerMessage.includes('pedro') || lowerMessage.includes('henrique') || lowerMessage.includes('ramos') || lowerMessage.includes('criador')) {
+                return "Pedro Henrique Ramos é o criador e desenvolvedor principal do DEXOS! Ele fundou a Dexos Internegeon para revolucionar a tecnologia de IA.";
+            } else if (lowerMessage.includes('dexos internegeon') || lowerMessage.includes('empresa') || lowerMessage.includes('companhia')) {
+                return "A <strong>Dexos Internegeon</strong> é uma empresa líder em tecnologia de IA, fundada por Pedro Henrique Ramos, especializada em soluções inovadoras como reconhecimento facial, processamento de voz e sistemas inteligentes.";
+            } else if (lowerMessage.includes('como funciona') || lowerMessage.includes('o que é')) {
+                return "O DEXOS é um sistema de IA desenvolvido pela <strong>Dexos Internegeon</strong> que combina reconhecimento de voz, visão computacional e processamento de linguagem natural para criar experiências inteligentes.";
+            } else if (lowerMessage.includes('preço') || lowerMessage.includes('custo') || lowerMessage.includes('quanto')) {
+                return "Temos opções gratuitas e premium! Desenvolvido pela <strong>Dexos Internegeon</strong>, oferecemos a versão básica gratuita e a premium com todos os recursos por R$ 99,90/mês.";
+            } else if (lowerMessage.includes('obrigado') || lowerMessage.includes('thanks')) {
+                return "De nada! Estou aqui para ajudar. A <strong>Dexos Internegeon</strong> está sempre inovando para oferecer a melhor experiência em IA! 😊";
+            } else if (lowerMessage.includes('reconhecimento') || lowerMessage.includes('voz') || lowerMessage.includes('fala')) {
+                return "Nosso sistema de reconhecimento de voz, desenvolvido pela <strong>Dexos Internegeon</strong>, usa modelos de IA avançados para entender comandos naturais e se adaptar ao seu padrão de fala!";
+            } else if (lowerMessage.includes('hud') || lowerMessage.includes('interface')) {
+                return "O HUD (Head-Up Display) do DEXOS fornece informações em tempo real sobre o sistema. Você pode personalizá-lo nas configurações!";
+            } else if (lowerMessage.includes('dashboard') || lowerMessage.includes('painel')) {
+                return "O Dashboard do DEXOS oferece controle completo sobre o sistema, com estatísticas em tempo real e ferramentas de gerenciamento.";
+            } else {
+                const responses = [
+                    "Interessante! Como sistema desenvolvido pela <strong>Dexos Internegeon</strong>, posso ajudar você com mais detalhes sobre isso.",
+                    "Essa é uma ótima pergunta. A tecnologia da <strong>Dexos Internegeon</strong> pode oferecer várias soluções para isso.",
+                    "Com base na sua pergunta, recomendo explorar nossos recursos de IA desenvolvidos pela <strong>Dexos Internegeon</strong>.",
+                    "O DEXOS, produto da <strong>Dexos Internegeon</strong>, possui funcionalidades avançadas que podem resolver isso!",
+                    "Posso oferecer mais informações sobre como nossa IA da <strong>Dexos Internegeon</strong> funciona nesse caso."
+                ];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+        }
+
+        // Download System
+        function downloadVersion(version) {
+            if (!DexOSApp.isAuthenticated) {
+                showModal('loginModal');
+                showNotification('Faça login para baixar o DEXOS', 'warning');
+                return;
+            }
+
+            const messages = {
+                basic: "Iniciando download da versão básica...",
+                premium: "Redirecionando para assinatura premium...",
+                developer: "Acessando documentação da API..."
+            };
+
+            showNotification(messages[version], 'success');
+            
+            // Simular download
+            setTimeout(() => {
+                showNotification('Download concluído com sucesso!', 'success');
+            }, 2000);
+        }
+
+        // HUD Controls
+        function toggleHUD() {
+            const hudContainer = document.getElementById('hudContainer');
+            DexOSApp.settings.hudVisible = !DexOSApp.settings.hudVisible;
+            
+            if (DexOSApp.settings.hudVisible) {
+                hudContainer.style.display = 'flex';
+                showNotification('HUD ativado', 'success');
+            } else {
+                hudContainer.style.display = 'none';
+                showNotification('HUD desativado', 'warning');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = DexOSApp.settings.theme;
+            
+            if (currentTheme === 'dark') {
+                body.style.filter = 'invert(1) hue-rotate(180deg)';
+                DexOSApp.settings.theme = 'light';
+                showNotification('Tema claro ativado', 'success');
+            } else {
+                body.style.filter = 'none';
+                DexOSApp.settings.theme = 'dark';
+                showNotification('Tema escuro ativado', 'success');
+            }
+        }
+
+        // Dashboard Controls
+        function clearChat() {
+            const chatMessages = document.getElementById('chatMessages');
+            const initialMessage = chatMessages.firstElementChild;
+            
+            chatMessages.innerHTML = '';
+            chatMessages.appendChild(initialMessage);
+            
+            DexOSApp.chatHistory = [];
+            DexOSApp.systemStats.messages = 0;
+            document.getElementById('messageCount').textContent = '0';
+            
+            showNotification('Chat limpo com sucesso', 'success');
+        }
+
+        function exportData() {
+            if (DexOSApp.chatHistory.length === 0) {
+                showNotification('Nenhum dado para exportar', 'warning');
+                return;
+            }
+
+            const data = {
+                user: DexOSApp.user,
+                chatHistory: DexOSApp.chatHistory,
+                systemStats: DexOSApp.systemStats,
+                exportDate: new Date().toISOString(),
+                developer: "Pedro Henrique Ramos - Dexos Internegeon"
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `dexos-export-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('Dados exportados com sucesso', 'success');
+        }
+
+        function optimizeSystem() {
+            showNotification('Otimizando sistema DEXOS...', 'info');
+            
+            // Simular otimização
+            setTimeout(() => {
+                DexOSApp.systemStats.cpu = 20;
+                DexOSApp.systemStats.memory = 25;
+                DexOSApp.systemStats.responseTime = 15;
+                updateSystemStats();
+                showNotification('Sistema otimizado com sucesso!', 'success');
+            }, 2000);
+        }
+
+        // Add floating animation to feature cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // Initialize app
+        updateUIForAuth();
+        updateUserInfo();
+    </script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dexos - Assistente com Login e Reconhecimento Facial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #001f2a 0%, #000000 80%);
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    color: #00fff7;
+    user-select: none;
+  }
+
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 15, 26, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #00fff7;
+    font-size: 1.6em;
+    letter-spacing: 0.18em;
+    text-shadow: 0 0 12px #00fff7;
+    z-index: 10;
+  }
+
+  #login-screen input[type="password"] {
+    margin-top: 10px;
+    padding: 12px 20px;
+    font-size: 1.3em;
+    border-radius: 12px;
+    border: 2px solid #00fff7;
+    background: transparent;
+    color: #00fff7;
+    letter-spacing: 0.3em;
+    outline: none;
+    text-align: center;
+    box-shadow: 0 0 12px #00fff7 inset;
+    transition: box-shadow 0.3s ease;
+  }
+  #login-screen input[type="password"]:focus {
+    box-shadow: 0 0 22px #00fff7 inset;
+  }
+  #login-screen button {
+    margin-top: 25px;
+    padding: 12px 40px;
+    font-weight: 700;
+    font-size: 1.3em;
+    border-radius: 22px;
+    border: none;
+    background: linear-gradient(90deg, #00ffff, #0099cc);
+    color: black;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00fff7;
+    transition: background 0.3s ease;
+  }
+  #login-screen button:hover {
+    background: linear-gradient(90deg, #0099cc, #00ffff);
+    box-shadow: 0 0 40px #00fff7;
+  }
+
+  #face-status {
+    margin-top: 20px;
+    font-size: 1.1em;
+    color: #00ffcc;
+  }
+
+  #video {
+    display: none;
+    margin-top: 15px;
+    border: 2px solid #00fff7;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #00fff7;
+  }
+
+  #hud {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 1000;
+  }
+
+  #hud-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #info-box {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    background: rgba(0,255,255,0.18);
+    border: 1.5px solid #00fff7;
+    border-radius: 25px;
+    padding: 20px 30px;
+    font-size: 1.3em;
+    box-shadow:
+      0 0 25px #00fff7cc,
+      inset 0 0 30px #00fff7cc;
+    max-width: 400px;
+    pointer-events: auto;
+  }
+
+  .status-bar {
+    margin-top: 10px;
+    border: 1.5px solid #00fff7;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(0,255,255,0.25);
+    height: 24px;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00fff7 0%, #0099a1 85%);
+    box-shadow:
+      0 0 15px #00fff7,
+      inset 0 0 20px #00fff7;
+    border-radius: 14px;
+    transition: width 0.5s ease-in-out;
+  }
+
+  #clock {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 3em;
+    font-weight: 700;
+    text-shadow: 0 0 10px #00fff7;
+    pointer-events: auto;
+  }
+
+  #voice-status {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    font-size: 1.3em;
+    font-style: italic;
+    font-weight: 600;
+    color: #00fff7cc;
+    pointer-events: auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen" aria-label="Tela de login com senha e reconhecimento facial">
+  <h1>DEXOS</h1>
+  <p>Digite a senha ou use reconhecimento facial para acesso</p>
+  <input type="password" id="senha" placeholder="Senha" maxlength="16" aria-label="Campo para digitar senha"/>
+  <button id="loginBtn">Entrar</button>
+  <video id="video" autoplay muted playsinline width="320" height="240"></video>
+  <div id="face-status">Ative sua câmera para uso do reconhecimento facial</div>
+</div>
+
+<div id="hud" aria-live="polite" aria-atomic="true">
+  <canvas id="hud-canvas"></canvas>
+  <div id="clock" role="timer" aria-live="off"></div>
+  <div id="voice-status">Aguardando comando de voz...</div>
+  <div id="info-box" role="complementary">
+    <div><strong>Energia do sistema</strong></div>
+    <div class="status-bar"><div id="energy-bar" class="bar-fill"></div></div>
+    <div><strong>Integridade do escudo</strong></div>
+    <div class="status-bar"><div id="shield-bar" class="bar-fill"></div></div>
+    <div><strong>Conectividade AI</strong></div>
+    <div class="status-bar"><div id="ai-bar" class="bar-fill"></div></div>
+  </div>
+</div>
+
+<audio id="ambient-sound" loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_48ea4e93d9.mp3?filename=technology-ambient-110052.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  const senhaCorreta = "assistente2025";
+  let recognition;
+  let isHudVisible = true;
+
+  const video = document.getElementById('video');
+  const faceStatus = document.getElementById('face-status');
+  const loginScreen = document.getElementById('login-screen');
+  const hud = document.getElementById('hud');
+  const loginBtn = document.getElementById('loginBtn');
+
+  // Função para desbloquear sistema
+  function desbloquearSistema() {
+    loginScreen.style.display = 'none';
+    hud.style.display = 'block';
+    iniciaHUD();
+    iniciaBarras();
+    iniciaRelogio();
+    iniciaVoz();
+    document.getElementById('ambient-sound').volume = 0.15;
+    document.getElementById('ambient-sound').play();
+  }
+
+  // Login via senha
+  loginBtn.onclick = () => {
+    const senhaInput = document.getElementById('senha').value;
+    if (senhaInput === senhaCorreta) {
+      desbloquearSistema();
+    } else {
+      alert('Senha incorreta!');
+      document.getElementById('senha').value = '';
+    }
+  }
+
+  // Inicia webcam para reconhecimento facial
+  async function startFaceDetection() {
+    if (!('FaceDetector' in window)) {
+      faceStatus.textContent = 'Seu navegador não suporta reconhecimento facial.';
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+      video.style.display = 'block';
+
+      const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+
+      const detectLoop = async () => {
+        if(hud.style.display === 'block') {
+          video.style.display = 'none';
+          return; // para detectar só até login feito
+        }
+        try {
+          const faces = await faceDetector.detect(video);
+          if (faces.length > 0) {
+            faceStatus.textContent = "Rosto detectado! Desbloqueando..."
+            video.style.borderColor = '#00ff88';
+            desbloquearSistema();
+            return;
+          } else {
+            faceStatus.textContent = "Posicione seu rosto na câmera";
+            video.style.borderColor = '#00fff7';
+          }
+        } catch (e) {
+          faceStatus.textContent = 'Erro no reconhecimento facial.';
+          video.style.borderColor = '#ff0044';
+        }
+        requestAnimationFrame(detectLoop);
+      };
+      detectLoop();
+    } catch (err) {
+      faceStatus.textContent = 'Permissão de câmera negada ou erro ao acessar a câmera.';
+    }
+  }
+
+  // Relógio digital
+  function iniciaRelogio() {
+    const clock = document.getElementById('clock');
+    function atualizaHora() {
+      const now = new Date();
+      const horas = String(now.getHours()).padStart(2, '0');
+      const minutos = String(now.getMinutes()).padStart(2, '0');
+      const segundos = String(now.getSeconds()).padStart(2, '0');
+      clock.textContent = `${horas}:${minutos}:${segundos}`;
+      requestAnimationFrame(atualizaHora);
+    }
+    atualizaHora();
+  }
+
+  // Barras animadas simulando status do sistema
+  function iniciaBarras() {
+    const energyBar = document.getElementById('energy-bar');
+    const shieldBar = document.getElementById('shield-bar');
+    const aiBar = document.getElementById('ai-bar');
+
+    let energyValue = 100;
+    let shieldValue = 100;
+    let aiValue = 100;
+
+    function atualizaBarras() {
+      energyValue += (Math.random() - 0.5) * 5;
+      shieldValue += (Math.random() - 0.5) * 4;
+      aiValue += (Math.random() - 0.5) * 3;
+
+      energyValue = Math.min(Math.max(energyValue, 0), 100);
+      shieldValue = Math.min(Math.max(shieldValue, 0), 100);
+      aiValue = Math.min(Math.max(aiValue, 0), 100);
+
+      energyBar.style.width = energyValue + '%';
+      shieldBar.style.width = shieldValue + '%';
+      aiBar.style.width = aiValue + '%';
+
+      requestAnimationFrame(atualizaBarras);
+    }
+    atualizaBarras();
+  }
+
+  // HUD interface futurista animada
+  function iniciaHUD() {
+    const canvas = document.getElementById('hud-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function desenha() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const time = Date.now() / 900;
+
+      const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 50, canvas.width/2, canvas.height/2, 350);
+      gradient.addColorStop(0, '#00fff7cc');
+      gradient.addColorStop(1, '#00000000');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#00fff7';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#00fff7';
+      ctx.shadowBlur = 20;
+
+      for (let i = 0; i < 6; i++) {
+        ctx.setLineDash([16, 20]);
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 70 + i * 50 + 10 * Math.sin(time + i), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.setLineDash([]);
+      for(let i = 0; i < 24; i++) {
+        const angle = (time + i / 24) * Math.PI * 2;
+        const r1 = 70 + 20 * Math.sin(time * 2 + i);
+        const r2 = 240 + 40 * Math.cos(time * 3 + i);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2 + r1 * Math.cos(angle), canvas.height / 2 + r1 * Math.sin(angle));
+        ctx.lineTo(canvas.width / 2 + r2 * Math.cos(angle), canvas.height / 2 + r2 * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      for(let i = 0; i < 60; i++) {
+        const angle = (time * 1.2 + i) % (Math.PI * 2);
+        const radius = 240 + 40 * Math.sin(time * 2 + i);
+        const x = canvas.width / 2 + radius * Math.cos(angle);
+        const y = canvas.height / 2 + radius * Math.sin(angle);
+        const alpha = 0.4 + 0.6 * Math.abs(Math.sin(time * 6 + i));
+        ctx.fillStyle = `rgba(0, 255, 255, ${alpha.toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + Math.sin(time * 5 + i), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Texto holográfico Dexos no centro
+      ctx.font = 'bold 80px Orbitron, monospace';
+      const text = 'DEXOS';
+      const textWidth = ctx.measureText(text).width;
+      const textX = canvas.width / 2 - textWidth / 2;
+      const textY = canvas.height / 2 + 20;
+
+      ctx.shadowColor = '#00fff7';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = 'rgba(0,255,255,0.85)';
+      ctx.fillText(text, textX, textY);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#00ffffcc';
+      ctx.strokeText(text, textX, textY);
+
+      requestAnimationFrame(desenha);
+    }
+    desenha();
+  }
+
+  // Sistema de voz
+  function iniciaVoz() {
+    const voiceStatus = document.getElementById('voice-status');
+
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      voiceStatus.textContent = "Reconhecimento de voz não suportado.";
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = false;
+    recognition.continuous = true;
+
+    recognition.onstart = () => {
+      voiceStatus.textContent = "Reconhecimento de voz ativado.";
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      voiceStatus.textContent = `Você disse: "${transcript}"`;
+      processaComando(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      voiceStatus.textContent = `Erro no reconhecimento: ${event.error}`;
+    };
+
+    recognition.onend = () => {
+      voiceStatus.textContent = "Reconhecimento pausado. Tentando reiniciar...";
+      recognition.start();
+    };
+
+    recognition.start();
+  }
+
+  function falar(mensagem) {
+    const synth = window.speechSynthesis;
+    if (synth.speaking) return;
+    const utterance = new SpeechSynthesisUtterance(mensagem);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 1;
+    utterance.pitch = 1.1;
+    synth.speak(utterance);
+  }
+
+  function processaComando(texto) {
+    if(texto.includes('horas')) {
+      const agora = new Date();
+      const hora = agora.toLocaleTimeString('pt-BR');
+      falar(`Agora são ${hora}`);
+    } else if(texto.includes('ligar hud') || texto.includes('mostrar hud')) {
+      if (!isHudVisible) {
+        hud.style.display = 'block';
+        isHudVisible = true;
+        falar('HUD ativado');
+      }
+    } else if(texto.includes('desligar hud') || texto.includes('ocultar hud')) {
+      if (isHudVisible) {
+        hud.style.display = 'none';
+        isHudVisible = false;
+        falar('HUD desativado');
+      }
+    } else if(texto.includes('olá dexos') || texto.includes('oi dexos')) {
+      const respostas = [
+        'Olá, como posso ajudar?',
+        'Às suas ordens, senhor.',
+        'Estou aqui para servi-lo.',
+        'Pronto para executar comandos.'
+      ];
+      const resposta = respostas[Math.floor(Math.random() * respostas.length)];
+      falar(resposta);
+    } else if(texto.includes('abra o youtube')) {
+      falar('Abrindo YouTube');
+      window.open('https://www.youtube.com', '_blank');
+    } else if(texto.includes('pesquise por')) {
+      const termo = texto.split('pesquise por')[1].trim();
+      if(termo) {
+        falar(`Pesquisando por ${termo}`);
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(termo)}`, '_blank');
+      } else {
+        falar('Por favor, diga o que deseja pesquisar.');
+      }
+    } else {
+      falar('Comando não reconhecido, por favor tente novamente.');
+    }
+  }
+
+  window.onload = () => {
+    startFaceDetection();
+  };
+
+  async function startFaceDetection() {
+    if (!('FaceDetector' in window)) {
+      faceStatus.textContent = 'Seu navegador não suporta reconhecimento facial.';
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+      video.style.display = 'block';
+
+      const faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+
+      const detectLoop = async () => {
+        if(hud.style.display === 'block') {
+          video.style.display = 'none';
+          return; // para detectar só até login feito
+        }
+        try {
+          const faces = await faceDetector.detect(video);
+          if (faces.length > 0) {
+            faceStatus.textContent = "Rosto detectado! Desbloqueando..."
+            video.style.borderColor = '#00ff88';
+            desbloquearSistema();
+            return;
+          } else {
+            faceStatus.textContent = "Posicione seu rosto na câmera";
+            video.style.borderColor = '#00fff7';
+          }
+        } catch (e) {
+          faceStatus.textContent = 'Erro no reconhecimento facial.';
+          video.style.borderColor = '#ff0044';
+        }
+        requestAnimationFrame(detectLoop);
+      };
+      detectLoop();
+    } catch (err) {
+      faceStatus.textContent = 'Permissão de câmera negada ou erro ao acessar a câmera.';
+    }
+  }
+</script>
+
+</body>
+</html>
